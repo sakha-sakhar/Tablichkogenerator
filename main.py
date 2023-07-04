@@ -4,45 +4,17 @@ import tkinter.filedialog
 import sys
 import os
 
-from classes.buttons import Button, OcButton, load_image, Area
+from classes.buttons import Button, OcButton, Area
 from classes.textinput import TextInput
 from data.oc import Oc
-from data.db_session import create_session, global_init
+from data.db_session import global_init
+from oc_window import add_oc_window, view_characters
+from help_func import load_image, load_font, terminate, import_not_hidden
 
-WIDTH = 1280
-HEIGHT = 960
-
-
-def load_font(name, font_size):
-    fullname = os.path.join('fonts', name)
-    if not os.path.isfile(fullname):
-        print(f'Файл со шрифтом {fullname} не найден')
-        sys.exit()
-    else:
-        return pygame.font.Font(fullname, font_size)
-
-
-def terminate():
-    pygame.quit()
-    sys.exit()
-
-
-def add_oc_window():
-    top = tkinter.Tk()
-    top.withdraw()  # hide window
-    file_name = tkinter.filedialog.askopenfilename(parent=top)
-    top.destroy()
-    img = load_image(file_name, None)
-
-    db_sess = create_session()
-    oc = Oc()
-    db_sess.add(oc)
-    db_sess.commit()
-
-    fname = f'{oc.id}.png'
-    pygame.image.save(img, 'images/' + fname)
-    oc.img = fname
-    db_sess.commit()
+WIDTH0 = 1280
+HEIGHT0 = 960
+WIDTH1 = 1080
+HEIGHT1 = 840
 
 
 def save():
@@ -50,37 +22,41 @@ def save():
 
 
 def create_mem_window():
+    running = True
     bg = load_image('bg.png')
     bgw = bg.get_width()
     bgh = bg.get_height()
     newpic = False
     
-    db_sess = create_session()
-    ocs = db_sess.query(Oc).all()
+    screen = pygame.display.set_mode((WIDTH0, HEIGHT0), pygame.RESIZABLE)
+    pygame.display.set_caption('Создать мем')
+    
+    ocs = import_not_hidden()
     oc_btns = []
-    for i in range(len(ocs)):
-        oc_btns.append(OcButton(ocs[i].img))
+    for oc in ocs:
+        oc_btns.append(OcButton(oc.img))
     areas = []
-    '''for i in range(6):
-        areas.append(Area((215, 60 + 105 * i, 735, 160 + 105 * i)))'''
-    areas.append(Area((400, 150, 600, 200)))
+    for i in range(6):
+        areas.append(Area((215, 60 + 105 * i, 735, 160 + 105 * i)))
+    '''areas.append(Area((400, 150, 600, 200)))
     areas.append(Area((400, 200, 600, 300)))
     areas.append(Area((400, 300, 600, 500)))
-    areas.append(Area((400, 500, 600, 800)))
+    areas.append(Area((400, 500, 600, 800)))'''
 
     texts = [TextInput(10, 60 + i * 105, 200, 100) for i in range(6)]
     title = TextInput(10, 20, 725, 40, (255, 255, 255))
     
     area_selection = False
     start_point = []
-
-    while True:
+    
+    while running:
         pygame.display.flip()
         events = pygame.event.get()
         
         oc_number_in_a_row = 0
         import_btn.coords = (screen.get_width() - 200, import_btn.coords[1])
         save_btn.coords = (screen.get_width() - 200, screen.get_height() - 50)
+        back_btn.coords = (screen.get_width() - 400, back_btn.coords[1])
         
         for event in events:
             mouse = pygame.mouse.get_pos()
@@ -132,6 +108,8 @@ def create_mem_window():
                         bgw = bg.get_width()
                         bgh = bg.get_height()
                         areas = []
+                if back_btn.check_mouse(mouse):
+                    running = False
                 if area_selection:
                     x1 = min(mouse[0], start_point[0])
                     y1 = min(mouse[1], start_point[1])
@@ -146,6 +124,9 @@ def create_mem_window():
                 for btn in oc_btns:
                     if btn.grabbed:
                         btn.coords = mouse[0] - btn.d_x, mouse[1] - btn.d_y
+            for btn in (import_btn, save_btn, back_btn):
+                btn.check_selected(mouse)
+        
         screen.fill((0, 0, 0))
         screen.blit(bg, (10, 60))
         if area_selection:
@@ -180,13 +161,15 @@ def create_mem_window():
                 
         screen.blit(save_btn.current, save_btn.coords)
         screen.blit(import_btn.current, import_btn.coords)
-
+        screen.blit(back_btn.current, back_btn.coords)
+    
 
 def coincidences_window():
     pass
 
 
 def menu_window():
+    global screen
     while True:
         pygame.display.flip()
         for event in pygame.event.get():
@@ -195,11 +178,16 @@ def menu_window():
                 terminate()
             elif event.type == pygame.MOUSEBUTTONUP:
                 if new_oc_btn.check_mouse(mouse):
-                    add_oc_window()
+                    view_characters()
+                    screen = pygame.display.set_mode((WIDTH1, HEIGHT1))
+                    pygame.display.set_caption('Табличкогенератор')
                 elif new_mem_btn.check_mouse(mouse):
                     create_mem_window()
+                    screen = pygame.display.set_mode((WIDTH1, HEIGHT1))
+                    pygame.display.set_caption('Табличкогенератор')
                 elif coincidences_btn.check_mouse(mouse):
                     coincidences_window()
+                    pygame.display.set_caption('Табличкогенератор')
             elif event.type == pygame.MOUSEMOTION:
                 new_mem_btn.check_selected(mouse)
                 new_oc_btn.check_selected(mouse)
@@ -222,15 +210,16 @@ def main():
 if __name__ == '__main__':
     pygame.init()
     global_init("data/memogenerator.db")
-    pygame.display.set_caption('мемогенератор какой-то')
+    pygame.display.set_caption('Табличкогенератор')
 
-    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+    screen = pygame.display.set_mode((WIDTH1, HEIGHT1))
 
-    new_oc_btn = Button((235, 212), 'new_oc')
+    new_oc_btn = Button((235, 212), 'new_oc')    
     new_mem_btn = Button((235, 322), 'new_mem')
     coincidences_btn = Button((235, 432), 'coincidences')
-    save_btn = Button((802, HEIGHT - 50), 'save')
+    save_btn = Button((802, HEIGHT0 - 50), 'save')
     import_btn = Button((880, 10), 'import')
+    back_btn = Button((680, 10), 'back')
 
     font = load_font('bahnschrift.ttf', 30)
 
