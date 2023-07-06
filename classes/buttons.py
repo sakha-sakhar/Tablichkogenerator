@@ -2,7 +2,8 @@ import pygame
 import sys
 import os
 
-from help_func import load_image, load_font, oc_change_hidden_state
+from help_func import load_image, load_font, oc_change_hidden_state, \
+     oc_delete, oc_load_image, surface_from_clipboard, crop_image
 
 pygame.font.init()
 font = load_font('bahnschrift.ttf', 30)
@@ -83,20 +84,22 @@ class OcMenuComplexButton:
         return sf
         
     def change_hidden_state(self):
-        print('change_hidden_state START', self.related_oc.hidden, self.hidden_n)
         oc_change_hidden_state(self.related_oc.id)
         self.related_oc.hidden = not self.related_oc.hidden
         self.hidden_n = int(self.related_oc.hidden)
         self.renderedpic = self.render()
-        print('change_hidden_state END  ', self.related_oc.hidden, self.hidden_n)
-    
+
     def delete(self):
-        print('delete START')
         oc_delete(self.related_oc.id)
-        print('delete END  ')
         
     def change_pic(self):
-        print('change_pic')
+        pic = surface_from_clipboard()
+        if pic:
+            self.img = crop_image(pic)
+            fname = f'{self.related_oc.id}.png'
+            pygame.image.save(self.img, 'images/' + fname)
+            self.img = pygame.transform.scale(load_image(self.related_oc.img), (100, 100))
+            self.renderedpic = self.render()
 
     def check_mouse(self, mouse):
         # print(self.related_oc.name, self.coords, mouse)
@@ -114,6 +117,14 @@ class OcMenuComplexButton:
             return 3 # delete
         return 0 
         
+
+class Arrow(Button):
+    def __init__(self, img, coords, reverse=False):
+        self.imgs = pygame.transform.flip(load_image(f'{img}_0.png'), reverse, False), \
+                    pygame.transform.flip(load_image(f'{img}_1.png'), reverse, False)
+        self.current = self.imgs[0]
+        self.coords = coords
+        self.size = self.current.get_size()
 
 
 class Area:

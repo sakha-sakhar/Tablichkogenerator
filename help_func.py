@@ -1,9 +1,10 @@
 import os
 import sys
 import pygame
+from PIL import ImageGrab
 
 
-from data.db_session import create_session, global_init
+from data.db_session import create_session
 from data.oc import Oc
 
 
@@ -39,7 +40,15 @@ def load_font(name, font_size):
     else:
         return pygame.font.Font(fullname, font_size)
     
+
+def oc_load_image(name):
+    original = load_image(name)
+    return crop_image(original)
     
+def crop_image(image):
+    x, y = image.get_size()
+    return image.subsurface(((x - min(x, y)) // 2, (y - min(x, y)) // 2, min(x, y), min(x, y)))
+
 
 def import_all_ocs():
     db_sess = create_session()
@@ -58,4 +67,13 @@ def oc_change_hidden_state(oc_id):
 
 
 def oc_delete(oc_id):
-    pass
+    db_sess = create_session()
+    db_sess.query(Oc).filter_by(id=oc_id).delete()
+    db_sess.commit()
+    
+    
+def surface_from_clipboard():
+    img = ImageGrab.grabclipboard()
+    if not img:
+        return None
+    return pygame.image.fromstring(img.tobytes(), img.size, img.mode)    

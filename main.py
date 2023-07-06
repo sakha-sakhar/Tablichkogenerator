@@ -1,15 +1,12 @@
 import pygame
 import tkinter
 import tkinter.filedialog
-import sys
-import os
 
 from classes.buttons import Button, OcButton, Area
 from classes.textinput import TextInput
-from data.oc import Oc
 from data.db_session import global_init
-from oc_window import add_oc_window, view_characters
-from help_func import load_image, load_font, terminate, import_not_hidden
+from oc_window import view_characters
+from help_func import load_image, load_font, terminate, import_not_hidden, surface_from_clipboard
 
 WIDTH0 = 1280
 HEIGHT0 = 960
@@ -56,7 +53,8 @@ def create_mem_window():
         oc_number_in_a_row = 0
         import_btn.coords = (screen.get_width() - 200, import_btn.coords[1])
         save_btn.coords = (screen.get_width() - 200, screen.get_height() - 50)
-        back_btn.coords = (screen.get_width() - 400, back_btn.coords[1])
+        paste_btn.coords = (screen.get_width() - 400, paste_btn.coords[1])
+        back_btn.coords = (screen.get_width() - 600, back_btn.coords[1])
         
         for event in events:
             mouse = pygame.mouse.get_pos()
@@ -94,14 +92,14 @@ def create_mem_window():
                         for btn in oc_btns:
                             mem.blit(btn.current, (btn.coords[0] - 10, btn.coords[1] - 60))
                     pygame.display.flip()
-                    pygame.image.save(mem, 'images/test.png')
+                    pygame.image.save(mem, 'result/result.png')
                 if import_btn.check_mouse(mouse):
-                    newpic = True
                     top = tkinter.Tk()
                     top.withdraw()  # hide window
                     file_name = tkinter.filedialog.askopenfilename(parent=top)
                     top.destroy()
                     if file_name:
+                        newpic = True
                         bg = load_image(file_name)
                         if bg.get_height() > 880:
                             bg = pygame.transform.rotozoom(bg, 0, 880 / bg.get_height())
@@ -110,6 +108,16 @@ def create_mem_window():
                         areas = []
                 if back_btn.check_mouse(mouse):
                     running = False
+                if paste_btn.check_mouse(mouse):
+                    pic = surface_from_clipboard()
+                    if pic:
+                        newpic = True
+                        bg = pic
+                        if bg.get_height() > 880:
+                            bg = pygame.transform.rotozoom(bg, 0, 880 / bg.get_height())
+                        bgw = bg.get_width()
+                        bgh = bg.get_height()
+                        areas = []
                 if area_selection:
                     x1 = min(mouse[0], start_point[0])
                     y1 = min(mouse[1], start_point[1])
@@ -124,8 +132,12 @@ def create_mem_window():
                 for btn in oc_btns:
                     if btn.grabbed:
                         btn.coords = mouse[0] - btn.d_x, mouse[1] - btn.d_y
-            for btn in (import_btn, save_btn, back_btn):
+            elif event.type == pygame.KEYUP and event.key in (8, 127):
+                if areas:
+                    del areas[-1]
+            for btn in (import_btn, save_btn, back_btn, paste_btn):
                 btn.check_selected(mouse)
+                
         
         screen.fill((0, 0, 0))
         screen.blit(bg, (10, 60))
@@ -148,7 +160,7 @@ def create_mem_window():
             t.update(events)
             t.draw(screen)
             
-        oc_number_in_a_row = (screen.get_width() - bg.get_width() - 20) // 105
+        oc_number_in_a_row = (screen.get_width() - bgw - 20) // 105
         if not oc_number_in_a_row:
             oc_number_in_a_row = 1
         i = 0
@@ -158,10 +170,9 @@ def create_mem_window():
                              60 + 105 * (i // oc_number_in_a_row)))
                 i += 1
             screen.blit(oc.current, oc.coords)
-                
-        screen.blit(save_btn.current, save_btn.coords)
-        screen.blit(import_btn.current, import_btn.coords)
-        screen.blit(back_btn.current, back_btn.coords)
+        
+        for btn in (save_btn, import_btn, back_btn, paste_btn):
+            screen.blit(btn.current, btn.coords)
     
 
 def coincidences_window():
@@ -192,10 +203,11 @@ def menu_window():
                 new_mem_btn.check_selected(mouse)
                 new_oc_btn.check_selected(mouse)
                 coincidences_btn.check_selected(mouse)
+            '''elif event.type == pygame.KEYUP:
+                print(event.key)'''
             screen.blit(new_mem_btn.current, new_mem_btn.coords)
             screen.blit(new_oc_btn.current, new_oc_btn.coords)
             screen.blit(coincidences_btn.current, coincidences_btn.coords)
-
 
 def main():
     mainrun = True
@@ -219,7 +231,8 @@ if __name__ == '__main__':
     coincidences_btn = Button((235, 432), 'coincidences')
     save_btn = Button((802, HEIGHT0 - 50), 'save')
     import_btn = Button((880, 10), 'import')
-    back_btn = Button((680, 10), 'back')
+    back_btn = Button((480, 10), 'back')
+    paste_btn = Button((680, 10), 'paste')
 
     font = load_font('bahnschrift.ttf', 30)
 

@@ -1,32 +1,49 @@
 import pygame
 import tkinter
-import sys
-import os
 
 from classes.textinput import TextInput
-from data.db_session import create_session, global_init
-from classes.buttons import Button, OcButton, OcMenuComplexButton
+from data.db_session import create_session
+from classes.buttons import Button, OcMenuComplexButton, Arrow
 from data.oc import Oc
-from help_func import load_image, load_font, terminate, import_all_ocs
+from help_func import load_font, terminate, import_all_ocs, oc_load_image, crop_image, surface_from_clipboard
 
-def render_ocs_on_screen():
+def render_ocs_on_screen(current_page, arrows):
     oclist = []
     i = 0
-    for oc in import_all_ocs():
-        oclist.append(OcMenuComplexButton(oc, (10 + 250 * (i % 4), 60 + 105 * (i // 4))))
+    all_ocs = import_all_ocs()
+    page_max = (len(all_ocs) - 1) // 28
+    if current_page > page_max:
+        current_page = page_max
+    elif current_page < 0:
+        current_page = 0
+    for oc in all_ocs[current_page * 28:current_page * 28 + 28]:
+        oclist.append(OcMenuComplexButton(oc, (10 + 250 * (i % 4), 60 + 105 * (i // 4))))  # 4 в строчку * 7 в столбик = 28 на страницу
         i += 1
-    return oclist
+    
+    if current_page > 0:
+        arrows[0].current = arrows[0].imgs[1]
+    else:
+        arrows[0].current = arrows[0].imgs[0]
+    
+    if current_page < page_max:
+        arrows[1].current = arrows[1].imgs[1]
+    else:
+        arrows[1].current = arrows[1].imgs[0]
+    return oclist, arrows, current_page
 
 
 def view_characters():
+    current_page = 0
     running = True
     pygame.display.set_caption('Просмотр персонажей')
     screen = pygame.display.set_mode((1080, 840))
     
     back_btn = Button((10, 10), 'back')
     new_btn = Button((200, 10), 'new')
+    paste_btn = Button((390, 10), 'paste')
+    arrows = [Arrow('arrow', (600, 10)), Arrow('arrow', (650, 10), reverse=True)]
     
-    ocbtns = render_ocs_on_screen()
+    ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
     
     while running:
         pygame.display.flip()
@@ -40,25 +57,37 @@ def view_characters():
                 if new_btn.check_mouse(mouse):
                     add_oc_window()
                     screen = pygame.display.set_mode((1080, 840))
-                    ocbtns = render_ocs_on_screen()
+                    ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
                 elif back_btn.check_mouse(mouse):
                     running = False
+                elif paste_btn.check_mouse(mouse):
+                    pic = surface_from_clipboard()
+                    if pic:
+                        add_oc_mainloop(crop_image(pic))
+                        screen = pygame.display.set_mode((1080, 840))
+                    ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
+                elif arrows[0].check_mouse(mouse):
+                    current_page -= 1
+                    ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
+                elif arrows[1].check_mouse(mouse):
+                    current_page += 1
+                    ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
                 for btn in ocbtns:
                     if btn.check_mouse(mouse) == 3:
-                        print('DELETED')
-                        ocbtns = render_ocs_on_screen()
+                        ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
             elif event.type == pygame.MOUSEMOTION:
                 new_btn.check_selected(mouse)
                 back_btn.check_selected(mouse)
+                paste_btn.check_selected(mouse)
             if event.type == pygame.QUIT:
                 terminate()
         
         screen.fill((0, 0, 0))
         for ocbutton in ocbtns:
             screen.blit(ocbutton.renderedpic, ocbutton.coords)
-        screen.blit(new_btn.current, new_btn.coords)
-        screen.blit(back_btn.current, back_btn.coords)
-        
+        for btn in (new_btn, back_btn, paste_btn, *arrows):
+            screen.blit(btn.current, btn.coords)
+
 
 def add_oc_mainloop(img):
     running = True
@@ -82,8 +111,8 @@ def add_oc_mainloop(img):
             mouse = pygame.mouse.get_pos()
             if event.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.MOUSEBUTTONUP:
-                if save_btn.check_mouse(mouse):
+            elif event.type == pygame.MOUSEBUTTONUP or event.type == pygame.KEYUP:
+                if save_btn.check_mouse(mouse) or (event.type == pygame.KEYUP and event.key == 13): # Enter
                     db_sess = create_session()
                     oc = Oc()
                     db_sess.add(oc)
@@ -96,7 +125,7 @@ def add_oc_mainloop(img):
                     oc.hidden = False
                     db_sess.commit()
                     running = False
-                elif cancel_btn.check_mouse(mouse):
+                elif cancel_btn.check_mouse(mouse) or (event.type == pygame.KEYUP and event.key == 27): # Esc
                     running = False
             elif event.type == pygame.MOUSEMOTION:
                 save_btn.check_selected(mouse)
@@ -121,5 +150,5 @@ def add_oc_window():
     file_name = tkinter.filedialog.askopenfilename(parent=top)
     top.destroy()
     if file_name:
-        img = load_image(file_name, None)
+        img = oc_load_image(file_name)
         add_oc_mainloop(img)
