@@ -1,7 +1,8 @@
 import os
 import sys
 import pygame
-from PIL import ImageGrab
+import io
+from PIL import ImageGrab, Image
 
 
 from data.db_session import create_session
@@ -60,6 +61,11 @@ def import_not_hidden():
     return db_sess.query(Oc).filter_by(hidden=False)
 
 
+def import_by_id(n):
+    db_sess = create_session()
+    return db_sess.query(Oc).filter_by(id=n)[0]
+
+
 def oc_change_hidden_state(oc_id):
     db_sess = create_session()
     db_sess.query(Oc).filter_by(id=oc_id).update({'hidden': not db_sess.query(Oc).filter_by(id=oc_id).first().hidden})
@@ -76,4 +82,14 @@ def surface_from_clipboard():
     img = ImageGrab.grabclipboard()
     if not img:
         return None
-    return pygame.image.fromstring(img.tobytes(), img.size, img.mode)    
+    return pygame.image.fromstring(img.tobytes(), img.size, img.mode)
+
+
+def surface_antialias_resize(surface, size, orig_size):
+    string = pygame.image.tostring(surface, "RGBA",False)
+    pic = Image.frombytes("RGBA", orig_size, string)
+    pic = pic.resize(size, Image.ANTIALIAS)
+    return pygame.image.fromstring(pic.tobytes(), pic.size, pic.mode)
+
+def surface_normal_resize(surface, size, orig_size):
+    return pygame.transform.scale(surface, size)

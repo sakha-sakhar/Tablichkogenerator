@@ -141,7 +141,7 @@ def add_oc_mainloop(img):
         screen.blit(save_btn.current, save_btn.coords)
         screen.blit(cancel_btn.current, cancel_btn.coords)
         
-        pygame.display.set_caption('Просмотр персонажей')
+    pygame.display.set_caption('Просмотр персонажей')
     
 
 def add_oc_window():

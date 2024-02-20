@@ -3,7 +3,8 @@ import sys
 import os
 
 from help_func import load_image, load_font, oc_change_hidden_state, \
-     oc_delete, oc_load_image, surface_from_clipboard, crop_image
+     oc_delete, oc_load_image, surface_from_clipboard, crop_image, \
+     surface_antialias_resize, surface_normal_resize
 
 pygame.font.init()
 font = load_font('bahnschrift.ttf', 30)
@@ -32,8 +33,9 @@ class Button:
 
 
 class OcButton(Button):
-    def __init__(self, name):
+    def __init__(self, name, oc_id):
         self.orig = load_image(name)
+        self.id = oc_id
         self.current = self.orig
         self.size = self.current.get_size()
         self.coords = (0, 0)
@@ -60,15 +62,18 @@ class OcButton(Button):
     def change_for_render(self, coords, size=(100, 100)):
         self.coords = coords
         if not self.size == size:
+            self.current = surface_antialias_resize(self.orig, size, self.orig.get_size())
+            # self.current = surface_normal_resize(self.orig, size, self.size)
             self.size = size
-            self.current = pygame.transform.scale(self.orig, size)
+
             
             
 class OcMenuComplexButton:
     def __init__(self, related_oc, coords):
         self.related_oc = related_oc
         self.coords = coords
-        self.img = pygame.transform.scale(load_image(self.related_oc.img), (100, 100))
+        img = load_image(self.related_oc.img)
+        self.img = surface_antialias_resize(img, (100, 100), img.get_size())
         self.hiddenpics = [load_image('hidden0.png'), load_image('hidden1.png')]
         self.hidden_n = int(self.related_oc.hidden)
         self.delpic = load_image('del_small.png')
@@ -170,5 +175,5 @@ class Area:
         i = 0
         for oc in self.positions:
             coords = (self.coords[0] + width * (i % row), self.coords[1] + height * (i // row))
-            oc.change_for_render(coords, (width, height))
+            oc.change_for_render(coords, (round(width), round(height)))
             i += 1
