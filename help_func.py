@@ -9,6 +9,7 @@ from data.db_session import create_session
 from data.oc import Oc
 
 
+
 def terminate():
     pygame.quit()
     sys.exit()
@@ -46,6 +47,28 @@ def oc_load_image(name):
     original = load_image(name)
     return crop_image(original)
     
+def new_oc(img, name):
+    db_sess = create_session()
+    oc = Oc()
+    db_sess.add(oc)
+    db_sess.commit()
+
+    fname = f'{oc.id}.png'
+    pygame.image.save(img, 'images/' + fname)
+    oc.img = fname
+    oc.name = name
+    oc.hidden = False
+    oc.relevant = True
+    db_sess.commit()
+    
+def edit_oc(oc_id, name, hidden=False, relevant=True):
+    db_sess = create_session()
+    
+    db_sess.query(Oc).filter_by(id=oc_id).update({'name': name,
+                                                  'hidden': hidden,
+                                                  'relevant': relevant})
+    db_sess.commit()
+    
 def crop_image(image):
     x, y = image.get_size()
     return image.subsurface(((x - min(x, y)) // 2, (y - min(x, y)) // 2, min(x, y), min(x, y)))
@@ -53,7 +76,9 @@ def crop_image(image):
 
 def import_all_ocs():
     db_sess = create_session()
-    return db_sess.query(Oc).all()
+    return list(db_sess.query(Oc).filter_by(hidden=False)) + \
+           list(db_sess.query(Oc).filter_by(hidden=True, relevant=True)) + \
+           list(db_sess.query(Oc).filter_by(hidden=True, relevant=False))
 
 
 def import_not_hidden():
@@ -90,6 +115,7 @@ def surface_antialias_resize(surface, size, orig_size):
     pic = Image.frombytes("RGBA", orig_size, string)
     pic = pic.resize(size, Image.ANTIALIAS)
     return pygame.image.fromstring(pic.tobytes(), pic.size, pic.mode)
+
 
 def surface_normal_resize(surface, size, orig_size):
     return pygame.transform.scale(surface, size)

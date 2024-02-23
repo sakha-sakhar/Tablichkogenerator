@@ -76,6 +76,7 @@ class OcMenuComplexButton:
         self.img = surface_antialias_resize(img, (100, 100), img.get_size())
         self.hiddenpics = [load_image('hidden0.png'), load_image('hidden1.png')]
         self.hidden_n = int(self.related_oc.hidden)
+        self.editpic = load_image('edit.png')
         self.delpic = load_image('del_small.png')
         self.name_render = font.render(self.related_oc.name, True, (255, 255, 255))
         self.renderedpic = self.render()
@@ -84,7 +85,8 @@ class OcMenuComplexButton:
         sf = pygame.surface.Surface((250, 100))
         sf.blit(self.img, (0, 0))
         sf.blit(self.hiddenpics[self.hidden_n], (100, 50))
-        sf.blit(self.delpic, (150, 50))
+        sf.blit(self.editpic, (150, 50))
+        sf.blit(self.delpic, (200, 50))
         sf.blit(self.name_render, (105, 10))
         return sf
         
@@ -105,6 +107,9 @@ class OcMenuComplexButton:
             pygame.image.save(self.img, 'images/' + fname)
             self.img = pygame.transform.scale(load_image(self.related_oc.img), (100, 100))
             self.renderedpic = self.render()
+            
+    def edit(self):  # редактирование параметров
+        print(f'pressed edit ad id {self.related_oc.id}')
 
     def check_mouse(self, mouse):
         # print(self.related_oc.name, self.coords, mouse)
@@ -117,6 +122,10 @@ class OcMenuComplexButton:
             self.change_hidden_state()
             return 2 # change_hidden_state
         if self.coords[0] + 150 < mouse[0] < self.coords[0] + 200 and \
+                self.coords[1] + 50 < mouse[1] < self.coords[1] + 100:
+            self.edit()
+            return 4 # edit
+        if self.coords[0] + 200 < mouse[0] < self.coords[0] + 250 and \
                 self.coords[1] + 50 < mouse[1] < self.coords[1] + 100:
             self.delete()
             return 3 # delete

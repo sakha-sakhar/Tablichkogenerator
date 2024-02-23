@@ -5,7 +5,9 @@ from classes.textinput import TextInput
 from data.db_session import create_session
 from classes.buttons import Button, OcMenuComplexButton, Arrow
 from data.oc import Oc
-from help_func import load_font, terminate, import_all_ocs, oc_load_image, crop_image, surface_from_clipboard
+from help_func import load_font, terminate, import_all_ocs, oc_load_image, crop_image, surface_from_clipboard, \
+     new_oc, edit_oc
+from oc_create_edit_window import add_oc_mainloop
 
 def render_ocs_on_screen(current_page, arrows):
     oclist = []
@@ -55,7 +57,9 @@ def view_characters():
                 terminate()
             elif event.type == pygame.MOUSEBUTTONUP:
                 if new_btn.check_mouse(mouse):
-                    add_oc_window()
+                    v, name, pic = add_oc_window()
+                    if v == 0:
+                        new_oc(crop_image(pic), name)
                     screen = pygame.display.set_mode((1080, 840))
                     ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
                 elif back_btn.check_mouse(mouse):
@@ -63,18 +67,26 @@ def view_characters():
                 elif paste_btn.check_mouse(mouse):
                     pic = surface_from_clipboard()
                     if pic:
-                        add_oc_mainloop(crop_image(pic))
+                        v, name = add_oc_mainloop()
+                        if v == 0:
+                            new_oc(crop_image(pic), name)
                         screen = pygame.display.set_mode((1080, 840))
                     ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
-                elif arrows[0].check_mouse(mouse):
+                elif arrows[0].check_mouse(mouse):  # - страница
                     current_page -= 1
                     ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
-                elif arrows[1].check_mouse(mouse):
+                elif arrows[1].check_mouse(mouse):  # + страница
                     current_page += 1
                     ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
-                for btn in ocbtns:
-                    if btn.check_mouse(mouse) == 3:
+                for btn in ocbtns:   # проверка каждой кнопки с персонажем
+                    code = btn.check_mouse(mouse)
+                    if code == 4:   # edit
+                        v, name = add_oc_mainloop()
+                        edit_oc(btn.related_oc.id, name)
+                        screen = pygame.display.set_mode((1080, 840))
+                    if code:  # перерендерить если хоть чето нажали
                         ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
+                        break
             elif event.type == pygame.MOUSEMOTION:
                 new_btn.check_selected(mouse)
                 back_btn.check_selected(mouse)
@@ -87,61 +99,6 @@ def view_characters():
             screen.blit(ocbutton.renderedpic, ocbutton.coords)
         for btn in (new_btn, back_btn, paste_btn, *arrows):
             screen.blit(btn.current, btn.coords)
-
-
-def add_oc_mainloop(img):
-    running = True
-    
-    pygame.display.set_caption('Новый персонаж')
-
-    screen = pygame.display.set_mode((360, 240))
-    save_btn = Button((150, 140), 'save')
-    cancel_btn = Button((150, 190), 'cancel')
-    inputcoords = (10, 10, 340, 80)
-    name_enter = TextInput(*inputcoords)
-
-    font = load_font('bahnschrift.ttf', 30)
-    
-    
-    while running:
-        pygame.display.flip()
-        events = pygame.event.get()
-        
-        for event in events:
-            mouse = pygame.mouse.get_pos()
-            if event.type == pygame.QUIT:
-                terminate()
-            elif event.type == pygame.MOUSEBUTTONUP or event.type == pygame.KEYUP:
-                if save_btn.check_mouse(mouse) or (event.type == pygame.KEYUP and event.key == 13): # Enter
-                    db_sess = create_session()
-                    oc = Oc()
-                    db_sess.add(oc)
-                    db_sess.commit()
-
-                    fname = f'{oc.id}.png'
-                    pygame.image.save(img, 'images/' + fname)
-                    oc.img = fname
-                    oc.name = name_enter.value
-                    oc.hidden = False
-                    db_sess.commit()
-                    running = False
-                elif cancel_btn.check_mouse(mouse) or (event.type == pygame.KEYUP and event.key == 27): # Esc
-                    running = False
-            elif event.type == pygame.MOUSEMOTION:
-                save_btn.check_selected(mouse)
-                cancel_btn.check_selected(mouse)
-            if event.type == pygame.QUIT:
-                terminate()
-        screen.fill((0, 0, 0))
-        
-        pygame.draw.rect(screen, (255, 255, 255), pygame.rect.Rect(*inputcoords))
-        name_enter.update(events)
-        name_enter.draw(screen)
-        
-        screen.blit(save_btn.current, save_btn.coords)
-        screen.blit(cancel_btn.current, cancel_btn.coords)
-        
-    pygame.display.set_caption('Просмотр персонажей')
     
 
 def add_oc_window():
@@ -151,4 +108,4 @@ def add_oc_window():
     top.destroy()
     if file_name:
         img = oc_load_image(file_name)
-        add_oc_mainloop(img)
+        return add_oc_mainloop() + [img]
