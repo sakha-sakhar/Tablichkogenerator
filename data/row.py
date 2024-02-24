@@ -8,7 +8,7 @@ class Row(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'row'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
                            autoincrement=True)
-    title = sqlalchemy.Column(sqlalchemy.String)
+    # title = sqlalchemy.Column(sqlalchemy.String, nullable=True) (а нам оно надо?)
     mem = sqlalchemy.Column(sqlalchemy.Integer,
                             sqlalchemy.ForeignKey("mem.id"))
     oc_table = sqlalchemy.Table(

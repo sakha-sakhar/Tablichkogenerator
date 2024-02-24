@@ -68,18 +68,12 @@ def edit_oc(oc_id, info):
     db_sess = create_session()
     db_sess.query(Oc).filter_by(id=oc_id).update(info)
     db_sess.commit()
-    
-def import_all_ocs():
-    db_sess = create_session()
-    return list(db_sess.query(Oc).filter_by(hidden=False)) + \
-           list(db_sess.query(Oc).filter_by(hidden=True, relevant=True)) + \
-           list(db_sess.query(Oc).filter_by(hidden=True, relevant=False))
+
 
 
 def import_not_hidden():
     db_sess = create_session()
     return db_sess.query(Oc).filter_by(hidden=False)
-
 
 def import_by_id(n):
     db_sess = create_session()

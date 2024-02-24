@@ -6,8 +6,9 @@ from classes.buttons import Button, OcButton, Area
 from classes.textinput import TextInput
 from data.db_session import global_init
 from oc_window import view_characters
-from help_func import load_image, load_font, terminate, import_not_hidden, surface_from_clipboard, import_by_id
-from handle_json import save_meme, open_meme, get_mew_meme_id
+from help_func import load_image, load_font, terminate, surface_from_clipboard, import_by_id, import_not_hidden
+from handle_json import save_meme, open_meme, get_mew_meme_id, \
+     import_not_hidden
 
 WIDTH0 = 1280
 HEIGHT0 = 920

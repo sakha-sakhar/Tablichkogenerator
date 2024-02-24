@@ -5,8 +5,9 @@ from classes.textinput import TextInput
 from data.db_session import create_session
 from classes.buttons import Button, OcMenuComplexButton, Arrow, TagButton
 from data.oc import Oc
-from help_func import load_font, terminate, import_all_ocs, oc_load_image, crop_image, surface_from_clipboard, \
-     new_oc, edit_oc, get_info, get_tags, load_image
+from help_func import load_font, terminate, oc_load_image, crop_image, surface_from_clipboard, \
+     new_oc, edit_oc, get_info, get_tags, load_imag
+# from handle_json import import_all_ocs
 from oc_create_edit_window import add_oc_mainloop
 
 SIZE = (1080, 920)
@@ -65,9 +66,9 @@ def view_characters():
                 terminate()
             elif event.type == pygame.MOUSEBUTTONUP:
                 if new_btn.check_mouse(mouse):
-                    v, info, pic = add_oc_window()
+                    v, info = add_oc_window()
                     if v == 0:
-                        new_oc(crop_image(pic), info['name'])
+                        new_oc(crop_image(info['img']), info['name'])
                     screen = pygame.display.set_mode(SIZE)
                     ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
                 elif back_btn.check_mouse(mouse):
@@ -126,4 +127,6 @@ def add_oc_window():
     top.destroy()
     if file_name:
         img = oc_load_image(file_name)
-        return add_oc_mainloop() + [img]
+        v, inf = add_oc_mainloop()
+        inf['img'] = img
+        return (v, inf)

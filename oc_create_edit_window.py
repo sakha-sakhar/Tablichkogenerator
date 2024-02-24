@@ -18,10 +18,13 @@ def add_oc_mainloop(name="", relevant=1, tags=""):
     name_inputcoords = (10, 10, 340, 40)
     name_enter = TextInput(*name_inputcoords)
     name_enter.value = name
+    name_enter.update([])
     
     tags_inputcoords = (10, 100, 340, 60)
     tags_enter = TextInput(*tags_inputcoords)
     tags_enter.value = tags
+    tags_enter.update([])
+    
     checked_field_relevant = Checked_field((10, 170), 'checked_small', relevant)
     tags_sign = load_image('tags.png')
     relevant_sign = load_image('relevant.png')

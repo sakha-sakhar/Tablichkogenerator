@@ -139,7 +139,7 @@ class OcMenuComplexButton:
             pygame.image.save(self.img, 'images/' + fname)
             self.img = pygame.transform.scale(load_image(self.related_oc.img), (100, 100))
             self.renderedpic = self.render()
-            
+
     def edit(self):  # редактирование параметров
         print(f'pressed edit ad id {self.related_oc.id}')
 
