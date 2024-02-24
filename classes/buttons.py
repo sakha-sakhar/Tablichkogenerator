@@ -4,7 +4,7 @@ import os
 
 from help_func import load_image, load_font, oc_change_hidden_state, \
      oc_delete, oc_load_image, surface_from_clipboard, crop_image, \
-     surface_antialias_resize, surface_normal_resize
+     surface_antialias_resize, surface_normal_resize, tag_filter
 
 pygame.font.init()
 font = load_font('bahnschrift.ttf', 30)
@@ -30,6 +30,38 @@ class Button:
             self.current = self.selected
         else:
             self.current = self.base
+    
+    
+class Checked_field(Button):
+    def __init__(self, coords, name='checked_small', state=0):
+        self.coords = coords
+        self.name = name
+        self.state = state
+        self.imgs = [load_image(f'{name}_0.png'), load_image(f'{name}_1.png')]
+        self.current = self.imgs[state]
+        self.size = self.current.get_size()
+        
+    def check_selected(self, mouse):
+        pass
+    
+    def change_state(self):
+        self.state = (self.state + 1) % 2
+        self.current = self.imgs[self.state]
+
+
+class TagButton(Button):
+    def __init__(self, name, coords):
+        self.name = name
+        self.coords = coords
+        self.current = font.render(name, True, (255, 255, 255))
+        self.size = self.current.get_size()
+        
+    def check_selected(self, mouse):
+        pass
+    
+    def action(self):
+        print(f'pressed {self.name} filter')
+        tag_filter(self.name)
 
 
 class OcButton(Button):

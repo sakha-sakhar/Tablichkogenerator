@@ -15,10 +15,6 @@ WIDTH1 = 1080
 HEIGHT1 = 840
 
 
-def save():
-    pass
-
-
 def create_mem_window():
     running = True
     bg = load_image('bg.png')

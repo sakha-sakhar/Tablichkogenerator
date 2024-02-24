@@ -13,6 +13,7 @@ class Oc(SqlAlchemyBase, SerializerMixin):
     name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     hidden = sqlalchemy.Column(sqlalchemy.Boolean)
     relevant = sqlalchemy.Column(sqlalchemy.Boolean)
+    tags = sqlalchemy.Column(sqlalchemy.String)
     rows = orm.relation('Row',
                         secondary='oc_row_association',
                         backref='oc')
