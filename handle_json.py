@@ -13,12 +13,7 @@ def save_db(name, db):
 
 def get_mew_meme_id():
     db = open_db(MEMES_DB)
-    a = 0
-    for i in db.keys():
-        if int(i) > a:
-            a = int(i)
-    return str(a + 1)
-
+    a = max(list(map(lambda i: int(i), db.keys())))
 
 def save_meme(areas_info, m_id):
     db = open_db(MEMES_DB)
@@ -112,11 +107,11 @@ def get_tags():
     return tags
 
 def tag_filter(tag):
-    db = open_db(CHARS_DB)
+    db = open_db(CHARS_DB) # В целях оптимизации база данных открывается один раз перед циклом 
     changes = 0
     for char in db:
         if (tag in db[char]['tags'] or tag == 'Все') and db[char]['relevant']:
-            db = oc_change_hidden_state(char, 0, db)
+            db = oc_change_hidden_state(char, 0, db)  # и передается в обновленном виде в каждой итерации
             changes += 1
         else:
             db = oc_change_hidden_state(char, 1, db)
