@@ -7,6 +7,10 @@ CHARS_DB = 'data/chars_db_test.json'
 def open_db(name):
     return json.load(open(name, 'r'))
 
+def save_db(name, db):
+    with open(name, 'w') as f:
+        f.write(json.dumps(db))
+
 def get_mew_meme_id():
     db = open_db(MEMES_DB)
     a = 0
@@ -19,8 +23,7 @@ def get_mew_meme_id():
 def save_meme(areas_info, m_id):
     db = open_db(MEMES_DB)
     db[m_id] = areas_info
-    with open(MEMES_DB, 'w') as f:
-        f.write(json.dumps(db))
+    save_db(MEMES_DB, db)
     
 
 def open_meme(m_id):
@@ -28,23 +31,86 @@ def open_meme(m_id):
     return db[str(m_id)]
 
 
-#####
+##### ПЕРСЫ
 
+# Импорты
     
-def import_all_ocs():
+def import_all_ocs():  # сразу происходит сортировка в порядке видимые > актуальные > остальные 
     db = open_db(CHARS_DB)
     l1 = []
     l2 = []
     l3 = []
     for char in db:
-        if db[char][hidden] == False:
+        db[char]['id'] = char
+        if db[char]['hidden'] == False:
             l1.append(db[char])
-        elif db[char][relevant] == True:
+        elif db[char]['relevant'] == True:
             l2.append(db[char])
         else:
             l3.append(db[char])
-    return l1 + l2 + l3
+    return l1 + l2 + l3     
 
-        
-        
+def import_not_hidden():
+    db = open_db(CHARS_DB)
+    l1 = []
+    for char in db:
+        db[char]['id'] = char
+        if db[char]['hidden'] == False:
+            l1.append(db[char])
+    return l1
     
+def import_by_id(n):
+    db = open_db(CHARS_DB)
+    ch = db[n]
+    ch['id'] = n
+    return ch
+
+# Операции
+
+def new_oc(img, name, relevant):
+    db = open_db(CHARS_DB)
+    oc_id = max(db.keys()) + 1
+    fname = f'{oc_id}.png'
+    pygame.image.save(img, 'images/' + fname)
+    db[oc_id] = {'name': name,
+                 'img': fname,
+                 'relevant': relevant,
+                 'hidden': False}
+    save_db(CHARS_DB, db)
+    
+def edit_oc(oc_id, info):
+    db = open_db(CHARS_DB)
+    for i in info:
+        db[oc_id][i] = info[i]
+    save_db(CHARS_DB, db)
+
+def oc_change_hidden_state(oc_id, state=-1):  # -1 - сменить состояние на противоположное нынешнему, state=0 или 1 - на конкретное
+    db = open_db(CHARS_DB)
+    if state == -1:
+        db[oc_id]['hidden'] = not db[oc_id]['hidden']
+    else:
+        db[oc_id]['hidden'] = bool(state)
+    save_db(CHARS_DB, db)
+
+def oc_delete(oc_id):
+    db = open_db(CHARS_DB)
+    del db[oc_id]
+    save_db(CHARS_DB, db)
+    
+# Теги
+
+def get_tags():
+    db = open_db(CHARS_DB)
+    tags = set()
+    for i in db:
+        for j in db[i]['tags']:
+            tags.add(j)
+    return tags
+
+def tag_filter(tag):
+    db = open_db(CHARS_DB)
+    for char in db:
+        if tag in db[char]['tags'] and db[char]['relevant']:
+            oc_change_hidden_state(char, 0)
+        else:
+            oc_change_hidden_state(char, 1)

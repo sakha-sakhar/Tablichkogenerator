@@ -6,15 +6,15 @@ from data.db_session import create_session
 from classes.buttons import Button, OcMenuComplexButton, Arrow, TagButton
 from data.oc import Oc
 from help_func import load_font, terminate, oc_load_image, crop_image, surface_from_clipboard, \
-     new_oc, edit_oc, get_info, get_tags, load_imag
-# from handle_json import import_all_ocs
+     load_image
+from handle_json import import_all_ocs, import_by_id, new_oc, edit_oc, get_tags
 from oc_create_edit_window import add_oc_mainloop
 
 SIZE = (1080, 920)
 
 
 def render_ocs_on_screen(current_page, arrows):
-    all_ocs=import_all_ocs()
+    all_ocs = import_all_ocs()
     oclist = []
     i = 0
     page_max = (len(all_ocs) - 1) // 28
@@ -68,7 +68,7 @@ def view_characters():
                 if new_btn.check_mouse(mouse):
                     v, info = add_oc_window()
                     if v == 0:
-                        new_oc(crop_image(info['img']), info['name'])
+                        new_oc(crop_image(info['img']), info['name'], info['relevant'])
                     screen = pygame.display.set_mode(SIZE)
                     ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
                 elif back_btn.check_mouse(mouse):
@@ -76,9 +76,9 @@ def view_characters():
                 elif paste_btn.check_mouse(mouse):
                     pic = surface_from_clipboard()
                     if pic:
-                        v, name = add_oc_mainloop()
+                        v, info = add_oc_mainloop()
                         if v == 0:
-                            new_oc(crop_image(pic), name)
+                            new_oc(crop_image(pic), info['name'], info['relevant'])
                         screen = pygame.display.set_mode(SIZE)
                     ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)
                 elif arrows[0].check_mouse(mouse):  # - страница
@@ -91,7 +91,7 @@ def view_characters():
                 for btn in ocbtns:   # проверка каждой кнопки с персонажем
                     code = btn.check_mouse(mouse)
                     if code == 4:   # edit
-                        char = get_info(btn.related_oc.id)
+                        char = import_by_id(btn.related_oc.id)
                         v, info = add_oc_mainloop(char.name, int(char.relevant), str(char.tags))
                         if v == 0:
                             edit_oc(btn.related_oc.id, info)
@@ -130,3 +130,4 @@ def add_oc_window():
         v, inf = add_oc_mainloop()
         inf['img'] = img
         return (v, inf)
+    return (-1, {})

@@ -50,7 +50,7 @@ def oc_load_image(name):
 # Работа с базой данных    
 
 
-def new_oc(img, name):
+"""def new_oc(img, name):
     db_sess = create_session()
     oc = Oc()
     db_sess.add(oc)
@@ -70,6 +70,11 @@ def edit_oc(oc_id, info):
     db_sess.commit()
 
 
+def import_all_ocs():
+    db_sess = create_session()
+    return list(db_sess.query(Oc).filter_by(hidden=False)) + \
+           list(db_sess.query(Oc).filter_by(hidden=True, relevant=True)) + \
+           list(db_sess.query(Oc).filter_by(hidden=True, relevant=False))
 
 def import_not_hidden():
     db_sess = create_session()
@@ -93,11 +98,6 @@ def oc_delete(oc_id):
     db_sess = create_session()
     db_sess.query(Oc).filter_by(id=oc_id).delete()
     db_sess.commit()
-    
-def get_info(oc_id):
-    db_sess = create_session()
-    char = db_sess.query(Oc).filter_by(id=oc_id)[0]
-    return char
 
 def get_tags():
     db_sess = create_session()
@@ -114,7 +114,7 @@ def tag_filter(tag):
         if tag in oc.tags and oc.relevant:
             oc_change_hidden_state(oc.id, 0)
         else:
-            oc_change_hidden_state(oc.id, 1)
+            oc_change_hidden_state(oc.id, 1)"""
 
     
 ###  Работа с картинками    

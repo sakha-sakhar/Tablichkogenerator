@@ -2,9 +2,11 @@ import pygame
 import sys
 import os
 
-from help_func import load_image, load_font, oc_change_hidden_state, \
-     oc_delete, oc_load_image, surface_from_clipboard, crop_image, \
-     surface_antialias_resize, surface_normal_resize, tag_filter
+from help_func import load_image, load_font, \
+     surface_from_clipboard, crop_image, oc_load_image, \
+     surface_antialias_resize, surface_normal_resize
+
+from handle_json import oc_delete, oc_change_hidden_state, tag_filter
 
 pygame.font.init()
 font = load_font('bahnschrift.ttf', 30)
@@ -104,13 +106,13 @@ class OcMenuComplexButton:
     def __init__(self, related_oc, coords):
         self.related_oc = related_oc
         self.coords = coords
-        img = load_image(self.related_oc.img)
+        img = load_image(self.related_oc['img'])
         self.img = surface_antialias_resize(img, (100, 100), img.get_size())
         self.hiddenpics = [load_image('hidden0.png'), load_image('hidden1.png')]
-        self.hidden_n = int(self.related_oc.hidden)
+        self.hidden_n = int(self.related_oc['hidden'])
         self.editpic = load_image('edit.png')
         self.delpic = load_image('del_small.png')
-        self.name_render = font.render(self.related_oc.name, True, (255, 255, 255))
+        self.name_render = font.render(self.related_oc['name'], True, (255, 255, 255))
         self.renderedpic = self.render()
     
     def render(self):  # beta
@@ -123,28 +125,27 @@ class OcMenuComplexButton:
         return sf
         
     def change_hidden_state(self):
-        oc_change_hidden_state(self.related_oc.id)
-        self.related_oc.hidden = not self.related_oc.hidden
-        self.hidden_n = int(self.related_oc.hidden)
+        oc_change_hidden_state(self.related_oc['id'])
+        self.related_oc['hidden'] = not self.related_oc['hidden']
+        self.hidden_n = int(self.related_oc['hidden'])
         self.renderedpic = self.render()
 
     def delete(self):
-        oc_delete(self.related_oc.id)
+        oc_delete(self.related_oc['id'])
         
     def change_pic(self):
         pic = surface_from_clipboard()
         if pic:
             self.img = crop_image(pic)
-            fname = f'{self.related_oc.id}.png'
+            fname = f'{self.related_oc["id"]}.png'
             pygame.image.save(self.img, 'images/' + fname)
-            self.img = pygame.transform.scale(load_image(self.related_oc.img), (100, 100))
+            self.img = pygame.transform.scale(load_image(self.related_oc['img']), (100, 100))
             self.renderedpic = self.render()
 
     def edit(self):  # редактирование параметров
-        print(f'pressed edit ad id {self.related_oc.id}')
+        print(f'pressed edit ad id {self.related_oc["id"]}')
 
     def check_mouse(self, mouse):
-        # print(self.related_oc.name, self.coords, mouse)
         if self.coords[0] < mouse[0] < self.coords[0] + 100 and \
                 self.coords[1] < mouse[1] < self.coords[1] + 100:
             self.change_pic()
