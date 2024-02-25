@@ -4,7 +4,6 @@ import tkinter.filedialog
 
 from classes.buttons import Button, OcButton, Area
 from classes.textinput import TextInput
-from data.db_session import global_init
 from oc_window import view_characters
 from help_func import load_image, load_font, terminate, surface_from_clipboard
 from handle_json import save_meme, open_meme, get_mew_meme_id, \
@@ -130,9 +129,10 @@ def create_mem_window():
                     
                 if open_btn.check_mouse(mouse):
                     print('open pressed')
-                    areas, ocs, oc_btns, m_id = open_mainloop(ocs)
-                    file_name = f'templates/{m_id}.png'
-                    if file_name:
+                    data = open_mainloop(ocs)
+                    if data[0] == 0:
+                        areas, ocs, oc_btns, m_id = data[1]
+                        file_name = f'templates/{m_id}.png'
                         newpic = True
                         bg = load_image(file_name)
                         bgw = bg.get_width()
@@ -245,7 +245,7 @@ def menu_window():
 def open_mainloop(ocs):
     running = True
     
-    ocs1 = [oc.id for oc in ocs]
+    ocs1 = [oc['id'] for oc in ocs]
     ocs2 = ocs1.copy()
     
     pygame.display.set_caption('Открыть мем')
@@ -258,6 +258,8 @@ def open_mainloop(ocs):
 
     font = load_font('bahnschrift.ttf', 30)
     
+    v = 0
+    data = []
     
     while running:
         pygame.display.flip()
@@ -280,21 +282,25 @@ def open_mainloop(ocs):
                         add_area = Area(ar['coords'])
                         for char in ar['chars']:
                             oc = import_by_id(char)
-                            if oc.id in ocs1:
-                                ocs1.remove(oc['id'])
-                            if oc not in ocs2:
-                                ocs2.append(oc['id'])
-                            a_btn = OcButton(oc['img'], oc['id'])
+                            cid = str(char)
+                            if cid in ocs1:
+                                ocs1.remove(cid)
+                            if cid not in ocs2:
+                                ocs2.append(cid)
+                            a_btn = OcButton(oc['img'], cid)
                             add_area.add(a_btn)
                             a_btn.inside_a_meme = True
                             oc_btns.append(a_btn)
                         areas.append(add_area)
+                    print(ocs1, ocs2)
                     for oc_id in ocs1:
                         oc = import_by_id(oc_id)
                         oc_btns.append(OcButton(oc['img'], oc['id']))
+                    data = [areas, ocs, oc_btns, m_id]
                     running = False
                 elif cancel_btn.check_mouse(mouse) or (event.type == pygame.KEYUP and event.key == 27): # Esc
                     running = False
+                    v = -1
             elif event.type == pygame.MOUSEMOTION:
                 save_btn.check_selected(mouse)
                 cancel_btn.check_selected(mouse)
@@ -311,7 +317,7 @@ def open_mainloop(ocs):
         
     screen = pygame.display.set_mode((WIDTH0, HEIGHT0), pygame.RESIZABLE)
     pygame.display.set_caption('Создать мем')
-    return areas, ocs, oc_btns, m_id
+    return v, data
 
 
 def main():
@@ -326,7 +332,6 @@ def main():
 
 if __name__ == '__main__':
     pygame.init()
-    global_init("data/memogenerator.db")
     pygame.display.set_caption('Табличкогенератор')
 
     screen = pygame.display.set_mode((WIDTH1, HEIGHT1))

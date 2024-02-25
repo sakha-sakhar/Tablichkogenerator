@@ -4,7 +4,7 @@ from classes.buttons import Button, Checked_field
 from help_func import load_font, terminate, load_image
 
 
-def add_oc_mainloop(name="", relevant=1, tags=""):
+def add_oc_mainloop(name="", relevant=1, tags=[]):
     running = True
     
     verdict = 0
@@ -22,7 +22,7 @@ def add_oc_mainloop(name="", relevant=1, tags=""):
     
     tags_inputcoords = (10, 100, 340, 60)
     tags_enter = TextInput(*tags_inputcoords)
-    tags_enter.value = tags
+    tags_enter.value = ', '.join(tags)
     tags_enter.update([])
     
     checked_field_relevant = Checked_field((10, 170), 'checked_small', relevant)
@@ -46,7 +46,7 @@ def add_oc_mainloop(name="", relevant=1, tags=""):
                 if save_btn.check_mouse(mouse) or (event.type == pygame.KEYUP and event.key == 13): # Enter
                     info['name'] = name_enter.value
                     info['relevant'] = checked_field_relevant.state
-                    info['tags'] = tags_enter.value
+                    info['tags'] = tags_enter.value.split(', ')
                     running = False
                 elif cancel_btn.check_mouse(mouse) or (event.type == pygame.KEYUP and event.key == 27): # Esc
                     running = False

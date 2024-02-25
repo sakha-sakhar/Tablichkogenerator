@@ -2,9 +2,7 @@ import pygame
 import tkinter
 
 from classes.textinput import TextInput
-from data.db_session import create_session
 from classes.buttons import Button, OcMenuComplexButton, Arrow, TagButton
-from data.oc import Oc
 from help_func import load_font, terminate, oc_load_image, crop_image, surface_from_clipboard, \
      load_image
 from handle_json import import_all_ocs, import_by_id, new_oc, edit_oc, get_tags
@@ -91,10 +89,10 @@ def view_characters():
                 for btn in ocbtns:   # проверка каждой кнопки с персонажем
                     code = btn.check_mouse(mouse)
                     if code == 4:   # edit
-                        char = import_by_id(btn.related_oc.id)
-                        v, info = add_oc_mainloop(char.name, int(char.relevant), str(char.tags))
+                        char = import_by_id(btn.related_oc['id'])
+                        v, info = add_oc_mainloop(char['name'], int(char['relevant']), char['tags'])
                         if v == 0:
-                            edit_oc(btn.related_oc.id, info)
+                            edit_oc(btn.related_oc['id'], info)
                         screen = pygame.display.set_mode(SIZE)
                     if code:  # перерендерить если хоть чето нажали
                         ocbtns, arrows, current_page = render_ocs_on_screen(current_page, arrows)

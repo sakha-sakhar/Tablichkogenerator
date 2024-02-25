@@ -1,7 +1,7 @@
 import json
 
 MEMES_DB = 'data/memes_db.json'
-CHARS_DB = 'data/chars_db_test.json'
+CHARS_DB = 'data/chars_db.json'
 
 
 def open_db(name):
@@ -61,7 +61,7 @@ def import_not_hidden():
     
 def import_by_id(n):
     db = open_db(CHARS_DB)
-    ch = db[n]
+    ch = db[str(n)]
     ch['id'] = n
     return ch
 
@@ -71,7 +71,7 @@ def new_oc(img, name, relevant):
     db = open_db(CHARS_DB)
     oc_id = max(db.keys()) + 1
     fname = f'{oc_id}.png'
-    pygame.image.save(img, 'images/' + fname)
+    pygame.image.save(img, 'images/chars/' + fname)
     db[oc_id] = {'name': name,
                  'img': fname,
                  'relevant': relevant,
@@ -84,13 +84,17 @@ def edit_oc(oc_id, info):
         db[oc_id][i] = info[i]
     save_db(CHARS_DB, db)
 
-def oc_change_hidden_state(oc_id, state=-1):  # -1 - сменить состояние на противоположное нынешнему, state=0 или 1 - на конкретное
-    db = open_db(CHARS_DB)
+def oc_change_hidden_state(oc_id, state=-1, db={}):  # -1 - сменить состояние на противоположное нынешнему, state=0 или 1 - на конкретное
+    no_db = bool(db)
+    if no_db:
+        db = open_db(CHARS_DB)
     if state == -1:
         db[oc_id]['hidden'] = not db[oc_id]['hidden']
     else:
         db[oc_id]['hidden'] = bool(state)
-    save_db(CHARS_DB, db)
+    if no_db:
+        save_db(CHARS_DB, db)
+    return db
 
 def oc_delete(oc_id):
     db = open_db(CHARS_DB)
@@ -109,8 +113,12 @@ def get_tags():
 
 def tag_filter(tag):
     db = open_db(CHARS_DB)
+    changes = 0
     for char in db:
+        # print(tag, db[char]['tags'], tag in db[char]['tags'] and db[char]['relevant'])
         if tag in db[char]['tags'] and db[char]['relevant']:
-            oc_change_hidden_state(char, 0)
+            db = oc_change_hidden_state(char, 0, db)
+            changes += 1
         else:
-            oc_change_hidden_state(char, 1)
+            db = oc_change_hidden_state(char, 1, db)
+    save_db(CHARS_DB, db)
