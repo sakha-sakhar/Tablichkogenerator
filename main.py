@@ -5,9 +5,10 @@ import tkinter.filedialog
 from classes.buttons import Button, OcButton, Area
 from classes.textinput import TextInput
 from oc_window import view_characters
-from help_func import load_image, load_font, terminate, surface_from_clipboard
+from help_func import load_image, load_font, terminate, surface_from_clipboard, surface_antialias_resize
 from handle_json import save_meme, open_meme, get_mew_meme_id, \
      import_not_hidden, import_by_id
+from count_cons import count_cons, relevant_filter_get_charslist
 
 WIDTH0 = 1280
 HEIGHT0 = 920
@@ -208,7 +209,49 @@ def create_mem_window():
     
 
 def coincidences_window():
-    pass
+    cons, chars = relevant_filter_get_charslist(count_cons())
+    print(cons, chars)
+    
+    height = 960
+    img = pygame.surface.Surface((1536, height))
+    n = len(chars)
+    sz = (height - 60) // n - 1
+    for i in range(len(chars)):
+        pic = load_image(f'chars/{chars[i]}.png')
+        pic = surface_antialias_resize(pic, (sz, sz), pic.get_size())
+        img.blit(pic, ((i + 1) * sz, 0))
+        img.blit(pic, (0, (i + 1) * sz))
+        for j in cons:
+            if str(j[0]) == chars[i]:
+                b = chars.index(str(j[1]))
+                pygame.draw.rect(img, (255, 255, 255), pygame.rect.Rect(sz * (b + 1) + 1, sz * (i + 1) + 1, sz - 1, sz - 1))
+            
+            
+    screen = pygame.display.set_mode((1536, 960))
+    pygame.display.set_caption('Совпадения')
+
+            
+    running = True
+    
+    
+    screen.blit(img, (0, 60))
+        
+    while running:
+        pygame.display.flip()
+        events = pygame.event.get()
+        for event in events:
+            mouse = pygame.mouse.get_pos()
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if back_btn.check_mouse(mouse):
+                    running = False
+            for btn in [back_btn]:
+                btn.check_selected(mouse)
+        
+        for btn in [back_btn]:
+            screen.blit(btn.current, btn.coords)
+    
 
 
 def menu_window():
@@ -231,12 +274,14 @@ def menu_window():
                 elif coincidences_btn.check_mouse(mouse):
                     coincidences_window()
                     pygame.display.set_caption('Табличкогенератор')
+                    screen = pygame.display.set_mode((WIDTH1, HEIGHT1))
             elif event.type == pygame.MOUSEMOTION:
                 new_mem_btn.check_selected(mouse)
                 new_oc_btn.check_selected(mouse)
                 coincidences_btn.check_selected(mouse)
             '''elif event.type == pygame.KEYUP:
                 print(event.key)'''
+            screen.fill((0, 0, 0))
             screen.blit(new_mem_btn.current, new_mem_btn.coords)
             screen.blit(new_oc_btn.current, new_oc_btn.coords)
             screen.blit(coincidences_btn.current, coincidences_btn.coords)
