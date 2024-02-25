@@ -62,7 +62,6 @@ class TagButton(Button):
         pass
     
     def action(self):
-        print(f'pressed {self.name} filter')
         tag_filter(self.name)
 
 

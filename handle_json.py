@@ -115,8 +115,7 @@ def tag_filter(tag):
     db = open_db(CHARS_DB)
     changes = 0
     for char in db:
-        # print(tag, db[char]['tags'], tag in db[char]['tags'] and db[char]['relevant'])
-        if tag in db[char]['tags'] and db[char]['relevant']:
+        if (tag in db[char]['tags'] or tag == 'Все') and db[char]['relevant']:
             db = oc_change_hidden_state(char, 0, db)
             changes += 1
         else:

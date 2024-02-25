@@ -36,7 +36,7 @@ def render_ocs_on_screen(current_page, arrows):
 
 
 def view_characters():
-    taglist = list(get_tags())
+    taglist = ['Все'] + list(get_tags())
     current_page = 0
     running = True
     pygame.display.set_caption('Просмотр персонажей')
