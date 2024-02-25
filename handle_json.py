@@ -14,6 +14,7 @@ def save_db(name, db):
 def get_mew_meme_id():
     db = open_db(MEMES_DB)
     a = max(list(map(lambda i: int(i), db.keys())))
+    return a + 1
 
 def save_meme(areas_info, m_id):
     db = open_db(MEMES_DB)
@@ -80,7 +81,7 @@ def edit_oc(oc_id, info):
     save_db(CHARS_DB, db)
 
 def oc_change_hidden_state(oc_id, state=-1, db={}):  # -1 - сменить состояние на противоположное нынешнему, state=0 или 1 - на конкретное
-    no_db = bool(db)
+    no_db = not bool(db)
     if no_db:
         db = open_db(CHARS_DB)
     if state == -1:

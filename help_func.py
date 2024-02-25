@@ -41,6 +41,12 @@ def oc_load_image(name):
     original = load_image(name)
     return crop_image(original)
 
+def percent_to_color(c1, c2, percent):
+    col = []
+    for i in range(3):
+        col.append(c2[i] * percent + c1[i] * (1 - percent))
+    return tuple(col)
+
 ###  Работа с картинками    
     
 def crop_image(image):

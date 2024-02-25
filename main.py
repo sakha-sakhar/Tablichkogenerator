@@ -5,7 +5,7 @@ import tkinter.filedialog
 from classes.buttons import Button, OcButton, Area
 from classes.textinput import TextInput
 from oc_window import view_characters
-from help_func import load_image, load_font, terminate, surface_from_clipboard, surface_antialias_resize
+from help_func import load_image, load_font, terminate, surface_from_clipboard, surface_antialias_resize, percent_to_color
 from handle_json import save_meme, open_meme, get_mew_meme_id, \
      import_not_hidden, import_by_id
 from count_cons import count_cons, relevant_filter_get_charslist
@@ -210,13 +210,18 @@ def create_mem_window():
 
 def coincidences_window():
     cons, chars = relevant_filter_get_charslist(count_cons())
-    print(cons, chars)
+    per0color = (0, 0, 128)
+    per100color = (128, 192, 0)
     
-    height = 960
-    img = pygame.surface.Surface((1536, height))
+    height = 900
+    delta = 60
+    img = pygame.surface.Surface((height, height))
     n = len(chars)
-    sz = (height - 60) // n - 1
-    for i in range(len(chars)):
+    sz = (height) // n - 1
+    for i in range(n):
+        for j in range(n):
+            pygame.draw.rect(img, (64, 64, 64), pygame.rect.Rect(sz * (i + 1) + 1, sz * (j + 1) + 1, sz - 1, sz - 1))
+    for i in range(n):
         pic = load_image(f'chars/{chars[i]}.png')
         pic = surface_antialias_resize(pic, (sz, sz), pic.get_size())
         img.blit(pic, ((i + 1) * sz, 0))
@@ -224,17 +229,18 @@ def coincidences_window():
         for j in cons:
             if str(j[0]) == chars[i]:
                 b = chars.index(str(j[1]))
-                pygame.draw.rect(img, (255, 255, 255), pygame.rect.Rect(sz * (b + 1) + 1, sz * (i + 1) + 1, sz - 1, sz - 1))
+                per = cons[j][0] / cons[j][1]
+                color = percent_to_color(per0color, per100color, per)
+                pygame.draw.rect(img, color, pygame.rect.Rect(sz * (b + 1) + 1, sz * (i + 1) + 1, sz - 1, sz - 1))
             
-            
-    screen = pygame.display.set_mode((1536, 960))
+    pygame.image.save(img, f'result/cons.png')
+    
+    screen = pygame.display.set_mode((height, height + delta))
     pygame.display.set_caption('Совпадения')
 
-            
     running = True
     
-    
-    screen.blit(img, (0, 60))
+    screen.blit(img, (0, delta))
         
     while running:
         pygame.display.flip()
