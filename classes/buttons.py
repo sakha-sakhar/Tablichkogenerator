@@ -66,15 +66,17 @@ class TagButton(Button):
 
 
 class OcButton(Button):
-    def __init__(self, name, oc_id):
+    def __init__(self, name, oc_id, duplicate=False):
+        self.img_name = name
         self.orig = load_image(name)
         self.id = oc_id
         self.current = self.orig
         self.size = self.current.get_size()
         self.coords = (0, 0)
-        self.grabbed = False
         self.d_x = 0
         self.d_y = 0
+        self.grabbed = False
+        self.duplicate = duplicate
         self.inside_a_meme = False
 
     def move(self, btns, areas):
@@ -98,6 +100,10 @@ class OcButton(Button):
             self.current = surface_antialias_resize(self.orig, size, self.orig.get_size())
             # self.current = surface_normal_resize(self.orig, size, self.size)
             self.size = size
+            
+    def create_copy(self):
+        return OcButton(self.img_name, self.id, duplicate=True)
+        
 
             
             

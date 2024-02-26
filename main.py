@@ -64,10 +64,18 @@ def create_mem_window():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for btn in oc_btns:
                     if btn.check_mouse(mouse):
-                        btn.grabbed = True
-                        btn.d_x = mouse[0] - btn.coords[0]
-                        btn.d_y = mouse[1] - btn.coords[1]
-                        break
+                        if event.button == 1:  # левый клик
+                            btn.grabbed = True
+                            btn.d_x = mouse[0] - btn.coords[0]
+                            btn.d_y = mouse[1] - btn.coords[1]
+                            break
+                        elif event.button == 3:  # правый клик
+                            if btn.duplicate:
+                                oc_btns.remove(btn)
+                            else:
+                                ind = oc_btns.index(btn) + 1
+                                oc_btns.insert(ind, btn.create_copy())
+                                
                 else:
                     if newpic: 
                         area_selection = True
