@@ -7,6 +7,7 @@ from help_func import load_image, load_font, \
      surface_antialias_resize, surface_normal_resize
 
 from handle_json import oc_delete, oc_change_hidden_state, tag_filter
+from math import ceil
 
 pygame.font.init()
 font = load_font('bahnschrift.ttf', 30)
@@ -193,6 +194,8 @@ class Area:
         self.coords = coords
         self.positions = []
         self.baselen = (coords[2] - coords[0]) // (coords[3] - coords[1])  # кол-во квадратиков в одной строке, если не сжимать
+        if not self.baselen:
+            self.baselen = 1
         self.baseheight = self.coords[3] - self.coords[1]   # высота зоны
     
     def check_mouse(self, mouse):
@@ -211,25 +214,23 @@ class Area:
         self.render()
         
     def render(self):
-        height = self.baseheight  # высота одного квадратика
-        width = height  # ширина одного квадратика (в пределах одной зоны они приведены к одному размеру)
-        coef = 1  # сжатие ширины
+        size = self.baseheight  # высота одного квадратика
         n = len(self.positions)  # кол-во квадратиков
         row = self.baselen  # количество квадратиков в строке
+        length = self.coords[2] - self.coords[0] # ширина поля
         nrows = 1  # количество строк
+        coef = 1  # сжатие ширины по сравнению с высотой
         if n > self.baselen:  # если мы не можем поместить квадратики в одну строку не сжимая
-            # print(n, self.baselen, height, self.coords[2] - self.coords[0])  # ну я так дебажу, а что
-            coef = width * n / (self.coords[2] - self.coords[0])  # в случае одной строки считаем во сколько раз длина несжатых квадратов превышает длину зоны
-            while coef >= nrows * 2:  # nrows  - это то, во сколько раз сжимается height, следовательно если сжатие width превышает в два раза сжатие height, то картинки 
-                nrows += 1            # становятся непропорциональными и надо что-то предпринять, например добавить еще одну строку
-                coef = (width * n) / (self.coords[2] - self.coords[0]) / nrows   # тот же коэффициент, но мы все разделили на nrows строк, следовательно коэффициент в nrows раз меньше (я думаю проблема тут, но не факт)
-            width = width // max(coef, nrows)  # собственно производим сжатие, НО если мы поделим на nrows у нас будет квадратная картинка, а если на coef - либо сжатая, либо сплющенная, сплющенная хуита так что лучше или квадрат или сжатую если сжатие необходимо, а есть coef > nrows то это так 
-            row = (self.coords[2] - self.coords[0]) // width  # считаем количество квадратиков в строке чтобы потом их удобно расставить (возможно проблема тут)
-            height = height // nrows  # это всегда так
-            # print(n, self.baselen, height, width, coef, nrows, row)
-            
+            coef = size * n / length  # в случае одной строки считаем во сколько раз длина несжатых квадратов превышает длину зоны
+            row = max(n // nrows, length // (ceil(size / nrows)))
+            while coef >= 2:
+                nrows += 1
+                row = max(ceil(n / nrows), length // (ceil(size / nrows)))  # выбираем максимальную длину строки из двух вариантов: в каждой строке поровну или только квадраты
+                coef = size * row / nrows / length
+            coef = max(1, coef)
+            size //= nrows
         i = 0
         for oc in self.positions:
-            coords = (self.coords[0] + width * (i % row), self.coords[1] + height * (i // row))
-            oc.change_for_render(coords, (round(width), round(height)))
+            coords = (self.coords[0] + (size // coef) * (i % row), self.coords[1] + size * (i // row))
+            oc.change_for_render(coords, (round(size // coef), round(size)))
             i += 1

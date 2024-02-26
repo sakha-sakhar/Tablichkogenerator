@@ -238,6 +238,8 @@ def coincidences_window():
         img.blit(pic, (0, (i + 1) * sz))
         for j in cons:
             if str(j[0]) == chars[i]:
+                if cons[j][1] == 0:
+                    continue
                 b = chars.index(str(j[1]))
                 per = cons[j][0] / cons[j][1]
                 color = percent_to_color(per0color, per100color, per)
