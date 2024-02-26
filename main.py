@@ -16,16 +16,20 @@ WIDTH1 = 1080
 HEIGHT1 = 840
 
 
+
+
 def create_mem_window():
-    running = True
+    ASTERISK = load_image('asterisk.png')
     bg = load_image('bg.png')
     bgw = bg.get_width()
     bgh = bg.get_height()
-    newpic = False
     
     screen = pygame.display.set_mode((WIDTH0, HEIGHT0), pygame.RESIZABLE)
     pygame.display.set_caption('Создать мем')
     
+    running = True
+    
+    newpic = False
     ocs = list(import_not_hidden())
     oc_btns = []
     for oc in ocs:
@@ -33,10 +37,6 @@ def create_mem_window():
     areas = []
     for i in range(6):
         areas.append(Area((215, 60 + 105 * i, 735, 160 + 105 * i)))
-    '''areas.append(Area((400, 150, 600, 200)))
-    areas.append(Area((400, 200, 600, 300)))
-    areas.append(Area((400, 300, 600, 500)))
-    areas.append(Area((400, 500, 600, 800)))'''
 
     texts = [TextInput(10, 60 + i * 105, 200, 100) for i in range(6)]
     title = TextInput(10, 20, 725, 40, (255, 255, 255))
@@ -71,11 +71,13 @@ def create_mem_window():
                             break
                         elif event.button == 3:  # правый клик
                             if btn.duplicate:
-                                oc_btns.remove(btn)
+                                oc_btns.remove(btn)   
+                                for area in areas:
+                                    if btn in area.positions:
+                                        area.del_oc(btn)
                             else:
                                 ind = oc_btns.index(btn) + 1
-                                oc_btns.insert(ind, btn.create_copy())
-                                
+                                oc_btns.insert(ind, btn.create_copy(ASTERISK))        
                 else:
                     if newpic: 
                         area_selection = True
@@ -107,7 +109,7 @@ def create_mem_window():
                         pygame.image.save(mem, f'images/templates/{m_id}.png')
                         mem.blit(title.surface, (10, 10, 725, 40))
                         for btn in oc_btns:
-                            mem.blit(btn.current, btn.coords)
+                            mem.blit(btn.pic_to_save(), btn.coords)
                         for t in texts:
                             t.draw(mem)
                     else:
@@ -115,7 +117,7 @@ def create_mem_window():
                         mem.blit(bg, (0, 0))
                         pygame.image.save(mem, f'images/templates/{m_id}.png')
                         for btn in oc_btns:
-                            mem.blit(btn.current, (btn.coords[0] - 10, btn.coords[1] - 60))
+                            mem.blit(btn.pic_to_save(), (btn.coords[0] - 10, btn.coords[1] - 60))
                     pygame.display.flip()
                     pygame.image.save(mem, f'result/{m_id}.png')
                     
@@ -405,6 +407,8 @@ if __name__ == '__main__':
     paste_btn = Button((680, 10), 'paste')
 
     font = load_font('bahnschrift.ttf', 30)
+    
+    
 
     main()
     pygame.quit()

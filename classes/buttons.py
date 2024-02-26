@@ -12,6 +12,7 @@ pygame.font.init()
 font = load_font('bahnschrift.ttf', 30)
 
 
+
 class Button:
     def __init__(self, coords, name):
         self.coords = coords
@@ -68,16 +69,18 @@ class TagButton(Button):
 class OcButton(Button):
     def __init__(self, name, oc_id, duplicate=False):
         self.img_name = name
-        self.orig = load_image(name)
         self.id = oc_id
-        self.current = self.orig
+        self.orig = load_image(name)
+        self.side_orig = self.orig.copy()
+        self.current = self.side_orig
         self.size = self.current.get_size()
         self.coords = (0, 0)
         self.d_x = 0
         self.d_y = 0
         self.grabbed = False
-        self.duplicate = duplicate
         self.inside_a_meme = False
+        self.duplicate = duplicate
+        self.extra_duplicate = []
 
     def move(self, btns, areas):
         self.grabbed = False
@@ -97,12 +100,18 @@ class OcButton(Button):
     def change_for_render(self, coords, size=(100, 100)):
         self.coords = coords
         if not self.size == size:
-            self.current = surface_antialias_resize(self.orig, size, self.orig.get_size())
+            self.current = surface_antialias_resize(self.side_orig, size, self.side_orig.get_size())
             # self.current = surface_normal_resize(self.orig, size, self.size)
             self.size = size
             
-    def create_copy(self):
-        return OcButton(self.img_name, self.id, duplicate=True)
+    def create_copy(self, *args):
+        btn = OcButton(self.img_name, self.id, duplicate=True)
+        for i in args:
+            btn.side_orig.blit(surface_antialias_resize(i, btn.side_orig.get_size(), i.get_size()), (0, 0))
+        return btn
+    
+    def pic_to_save(self):
+        return surface_antialias_resize(self.orig, self.current.get_size(), self.orig.get_size())
         
 
             
