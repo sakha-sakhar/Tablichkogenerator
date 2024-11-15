@@ -1,7 +1,7 @@
 import json
 
-def count_cons():
-    db = json.load(open('data/memes_db.json', 'r'))
+def count_cons(CURRENT_DB):
+    db = json.load(open(f'data/{CURRENT_DB}_memes_db.json', 'r'))
     
     cons = {}
 
@@ -31,14 +31,25 @@ def count_cons():
     return cons
 
 
-def relevant_filter_get_charslist(cons):
-    db = json.load(open('data/chars_db.json', 'r'))
+def filter_get_charslist(cons, filters, CURRENT_DB):
+    db = json.load(open(f'data/{CURRENT_DB}_chars_db.json', 'r'))
     chars = set()
+    to_delete = set()
     for pair in cons:
-        if db[str(pair[0])]['relevant'] == False or \
-           db[str(pair[1])]['relevant'] == False:
-            del cons[pair]
-        else:
-            chars.add(str(pair[0]))
-            chars.add(str(pair[1]))
+        try:
+            if filters[0] and \
+               (db[str(pair[0])]['relevant'] == False or \
+               db[str(pair[1])]['relevant'] == False):
+                to_delete.add(pair)
+            elif filters[1] and \
+               any(i not in db[str(pair[0])]['tags'] or \
+               i not in db[str(pair[1])]['tags'] for i in filters[1]):
+                to_delete.add(pair)
+            else:
+                chars.add(str(pair[0]))
+                chars.add(str(pair[1]))
+        except KeyError:
+            to_delete.add(pair)
+    for i in to_delete:
+        del cons[i]
     return cons, sorted(list(chars), key=lambda x: int(x))

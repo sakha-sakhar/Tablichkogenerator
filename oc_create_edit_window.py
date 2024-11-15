@@ -16,12 +16,12 @@ def add_oc_mainloop(name="", relevant=1, tags=[]):
     cancel_btn = Button((150, 310), 'cancel')
     
     name_inputcoords = (10, 10, 340, 40)
-    name_enter = TextInput(*name_inputcoords)
+    name_enter = TextInput(*name_inputcoords, disable_enter=True)
     name_enter.value = name
     name_enter.update([])
     
     tags_inputcoords = (10, 100, 340, 60)
-    tags_enter = TextInput(*tags_inputcoords)
+    tags_enter = TextInput(*tags_inputcoords, disable_enter=True)
     tags_enter.value = ', '.join(tags)
     tags_enter.update([])
     
